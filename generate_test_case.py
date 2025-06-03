@@ -1,51 +1,64 @@
 import os
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
+import requests
 
-def generate_test_case(requirement: str, test_type: str = None) -> str:
+
+def load_prompt():
+    with open("prompt/automationPrompt.txt" , "r") as file:
+     return file.read()
+        
+
+def generate_test_case(requirement: str,test_type: str) -> str:
+ 
     """
-    Generate test case using the VermaPankaj123/TestCaseGeneration-Mistral model.
+    Generate test case using the mistralai/Mistral-7B-v0.1 model.
     """
 
-    print(f"Generating test case for: '{requirement}' with test_type='{test_type}'")
+
+    print(f"Generating test case for: '{requirement}' with test type '{test_type}'")
 
     # Hugging Face token must be set as an environment variable
     hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
     if not hf_token:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN environment variable is not set")
+    
+    prompt_template = load_prompt()
 
-    model_id = "Pankaj/TestCaseGeneration-Mistral"
+    prompt = prompt_template.replace("{requirement}", requirement)
+    prompt = prompt.replace("{test_type}", test_type)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id,token=hf_token)
-    model = AutoModelForCausalLM.from_pretrained(model_id,token=hf_token)
+    paylaod = {
+       "inputs": prompt,
+       "parameters": {
+          "max_new_tokens": 1000,
+          "temperature": 0.5,
+          "top_p": 0.9
+       }
+    }
 
-    prompt = f"""
-User Story:
-{requirement}
-
-Test Cases:
-"""
-
-    inputs = tokenizer(prompt, return_tensors="pt")
-
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=300,
-        temperature=0.7,
-        do_sample=True,
-        pad_token_id=tokenizer.eos_token_id
+    response = requests.post(
+       f"https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+       headers={"Authorization": f"Bearer {hf_token}"},
+       json=paylaod
     )
 
-    # Decode output tokens to text
-    result = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    response_json = response.json()
+    print("Response from model",response_json)
 
-    return result
+    if isinstance(response_json,list):
+       generated_text = response_json[0].get('generated_text','No text generated')
+    elif isinstance(response_json,dict):
+       generated_text = response_json.get('generated_text','No text generated')
+    else:
+       generated_text = 'unexpected format'
 
+
+    print("generated test cases",generated_text)   
+
+    return generated_text
 
 if __name__ == "__main__":
     requirement = input("Enter the user story or requirement:\n")
-    test_type = input("Enter test type (optional): ").strip() or None
 
     print("\nGenerating test cases...\n")
-    test_cases = generate_test_case(requirement, test_type)
-    print(test_cases)
+    test_cases = generate_test_case(requirement)
+    
