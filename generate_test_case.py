@@ -3,6 +3,10 @@ import requests
 
 
 def load_prompt():
+    with open("prompt/prompt.txt" , "r") as file:
+     return file.read()
+    
+def load_automation_prompt():
     with open("prompt/automationPrompt.txt" , "r") as file:
      return file.read()
         
@@ -10,7 +14,7 @@ def load_prompt():
 def generate_test_case(requirement: str,test_type: str) -> str:
  
     """
-    Generate test case using the mistralai/Mistral-7B-v0.1 model.
+    Generate test case using the mistralai/Mistral-7B-v0.3 model.
     """
 
 
@@ -55,6 +59,45 @@ def generate_test_case(requirement: str,test_type: str) -> str:
     print("generated test cases",generated_text)   
 
     return generated_text
+
+
+def generate_automation_script(progLanguage,combined_test_cases: str) -> str:
+
+
+    prompt_template = load_automation_prompt()
+    prompt = prompt_template.replace("{test_cases}", combined_test_cases)
+    prompt = prompt.replace("{progLanguage}", progLanguage)
+
+    hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    if not hf_token:
+        raise ValueError("HUGGINGFACEHUB_API_TOKEN environment variable is not set")
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 1000,
+            "temperature": 0.5,
+            "top_p": 0.9
+        }
+    }
+
+    response = requests.post(
+        f"https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+        headers={"Authorization": f"Bearer {hf_token}"},
+        json=payload
+    )
+
+    response_json = response.json()
+    if isinstance(response_json, list):
+        generated_text = response_json[0].get('generated_text', 'No script generated')
+    elif isinstance(response_json, dict):
+        generated_text = response_json.get('generated_text', 'No script generated')
+    else:
+        generated_text = 'Unexpected format'
+
+    print("Generated automation script:\n", generated_text)
+    return generated_text
+
 
 if __name__ == "__main__":
     requirement = input("Enter the user story or requirement:\n")
