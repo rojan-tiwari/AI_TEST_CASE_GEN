@@ -5,24 +5,16 @@ import csv
 from io import StringIO
 
 app = Flask(__name__)
-# ...existing code...
-CORS(app, resources={r"/*": {"origins": [
-    "http://localhost:63342",
-    "http://127.0.0.1:63342"
-]}}, supports_credentials=True)
-# ...existing code...
+CORS(app, supports_credentials=True)
 
 @app.route('/generate', methods=['POST'])
 def generate_test_case_endpoint():
+    
     data = request.json
+    if data is None:    
+        return jsonify({'status': 'error', 'message': 'Invalid JSON payload'}), 400
     requirement = data.get('requirement')
     test_type = data.get('testType')  
-
-    if not requirement or not test_type:
-        return jsonify({
-            'status': 'error',
-            'message': 'Missing required fields'
-        }), 400
 
     test_case_output = generate_test_case(requirement, test_type)
 
@@ -46,6 +38,8 @@ def upload_csv():
     file = request.files['file']
     progLanguage = request.form.get('progLanguage')
 
+    if file.filename is None:
+        return jsonify({'status': 'error', 'message': 'Invalid JSON payload'}), 400
     if not file.filename.endswith('.csv'):
         return jsonify({'status': 'error', 'message': 'Invalid file format. Please upload a CSV'}), 400
 

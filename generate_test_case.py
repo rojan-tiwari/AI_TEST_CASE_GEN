@@ -49,7 +49,7 @@ def generate_test_case(requirement: str,test_type: str) -> str:
        headers={"Authorization": f"Bearer {hf_token}"},
        json=paylaod
     )
-
+    
     response_json = response.json()
     print("Response from model",response_json)
 
@@ -110,5 +110,5 @@ if __name__ == "__main__":
     requirement = input("Enter the user story or requirement:\n")
 
     print("\nGenerating test cases...\n")
-    test_cases = generate_test_case(requirement)
+    test_cases = generate_test_case(requirement,test_type="")
     
