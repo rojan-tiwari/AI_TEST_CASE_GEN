@@ -1,51 +1,114 @@
 import os
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
+import requests
+from dotenv import load_dotenv
 
-def generate_test_case(requirement: str, test_type: str = None) -> str:
+
+def load_prompt():
+    with open("prompt/prompt.txt" , "r") as file:
+     return file.read()
+    
+def load_automation_prompt():
+    with open("prompt/automationPrompt.txt" , "r") as file:
+     return file.read()
+        
+
+def generate_test_case(requirement: str,test_type: str) -> str:
+ 
     """
-    Generate test case using the VermaPankaj123/TestCaseGeneration-Mistral model.
+    Generate test case using the mistralai/Mistral-7B-v0.3 model.
     """
 
-    print(f"Generating test case for: '{requirement}' with test_type='{test_type}'")
+
+    print(f"Generating test case for: '{requirement}' with test type '{test_type}'")
 
     # Hugging Face token must be set as an environment variable
-    hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    load_dotenv()
+
+    hf_token = os.environ.get("HUGGINGFACE_TOKEN")
+
+    # hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    if not hf_token:
+        raise ValueError("HUGGINGFACEHUB_API_TOKEN environment variable is not set")
+    
+    prompt_template = load_prompt()
+
+    prompt = prompt_template.replace("{requirement}", requirement)
+    prompt = prompt.replace("{test_type}", test_type)
+
+    paylaod = {
+       "inputs": prompt,
+       "parameters": {
+          "max_new_tokens": 1000,
+          "temperature": 0.5,
+          "top_p": 0.9
+       }
+    }
+
+    response = requests.post(
+       f"https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+       headers={"Authorization": f"Bearer {hf_token}"},
+       json=paylaod
+    )
+    
+    response_json = response.json()
+    print("Response from model",response_json)
+
+    if isinstance(response_json,list):
+       generated_text = response_json[0].get('generated_text','No text generated')
+    elif isinstance(response_json,dict):
+       generated_text = response_json.get('generated_text','No text generated')
+    else:
+       generated_text = 'unexpected format'
+
+
+    print("generated test cases",generated_text)   
+
+    return generated_text
+
+
+def generate_automation_script(progLanguage,combined_test_cases: str) -> str:
+
+
+    prompt_template = load_automation_prompt()
+    prompt = prompt_template.replace("{test_cases}", combined_test_cases)
+    prompt = prompt.replace("{progLanguage}", progLanguage)
+
+    hf_token = os.environ.get("HUGGINGFACE_TOKEN")
     if not hf_token:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN environment variable is not set")
 
-    model_id = "Pankaj/TestCaseGeneration-Mistral"
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 1000,
+            "temperature": 0.5,
+            "top_p": 0.9
+        }
+    }
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id,token=hf_token)
-    model = AutoModelForCausalLM.from_pretrained(model_id,token=hf_token)
-
-    prompt = f"""
-User Story:
-{requirement}
-
-Test Cases:
-"""
-
-    inputs = tokenizer(prompt, return_tensors="pt")
-
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=300,
-        temperature=0.7,
-        do_sample=True,
-        pad_token_id=tokenizer.eos_token_id
+    response = requests.post(
+        f"https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+        headers={"Authorization": f"Bearer {hf_token}"},
+        json=payload
     )
 
-    # Decode output tokens to text
-    result = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    return result
+    print(response)
+    response_json = response.json()
+    if isinstance(response_json, list):
+        generated_text = response_json[0].get('generated_text', 'No script generated')
+    elif isinstance(response_json, dict):
+        generated_text = response_json.get('generated_text', 'No script generated')
+    else:
+        generated_text = 'Unexpected format'
+
+    print("Generated automation script:\n", generated_text)
+    return generated_text
 
 
 if __name__ == "__main__":
     requirement = input("Enter the user story or requirement:\n")
-    test_type = input("Enter test type (optional): ").strip() or None
 
     print("\nGenerating test cases...\n")
-    test_cases = generate_test_case(requirement, test_type)
-    print(test_cases)
+    test_cases = generate_test_case(requirement,test_type="")
+    

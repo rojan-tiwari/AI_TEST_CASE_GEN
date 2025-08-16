@@ -1,0 +1,30 @@
+You are a software QA expert. Given the following user story, generate 3 test cases covering positive, negative, and edge scenarios.
+
+For each test case, include:
+
+- A descriptive title.
+- Pre-condition (if any).
+- Step-by-step actions.
+- Expected result.
+
+Use this format:
+1. [Positive] Title of the positive test case
+   Pre-condition: ...
+   Steps: ...
+   Expected Result: ...
+
+2. [Negative] Title of the negative test case
+   Pre-condition: ...
+   Steps: ...
+   Expected Result: ...
+
+3. [Edge] Title of the edge test case
+   Pre-condition: ...
+   Steps: ...
+   Expected Result: ...
+
+User Story: {requirement}
+Test Type: {test_type}
+
+Only return the test cases. Do not repeat this instruction.
+

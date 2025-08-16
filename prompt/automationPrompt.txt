@@ -1,0 +1,22 @@
+You are a senior QA automation engineer.
+
+Generate selenium automation scripts in {progLanguage} for the following test cases:
+
+{test_cases}
+
+Requirements:
+- Use clear and descriptive test method names based on the test scenario.
+- Use a popular test framework:
+    - JUnit 5 or TestNG if {progLanguage} is Java.
+    - pytest or unittest if {progLanguage} is Python.
+- Include proper setup and teardown methods:
+    - @BeforeEach / @AfterEach or @BeforeMethod / @AfterMethod for Java.
+    - `setup_method` and `teardown_method` or `setUp` / `tearDown` for Python.
+- Use explicit waits (e.g., WebDriverWait and ExpectedConditions).
+- Use assertions to validate critical checkpoints.
+- Follow Page Object Model structure if appropriate.
+- Organize the script as a valid, standalone test file with proper imports and structure.
+
+ Return the result as a complete file:
+- If {progLanguage} is Java, return a `.java` file.
+- If {progLanguage} is Python, return a `.py` file.
