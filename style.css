@@ -15,6 +15,15 @@
             padding: 20px;
         }
 
+        .header img {
+        width: 100px; /* Increase the size */
+        height: auto;
+        position: absolute;
+        top: 30px; /* Move a couple of pixels down */
+        left: 20px; /* Keep it to the left */
+        z-index: 1;
+    }
+
         .container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);

@@ -349,6 +349,49 @@
                 }
             });
 
+            // ...existing code...
+
+        // Handle file input and display uploaded file names
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('fileInput');
+            const uploadedFilesDiv = document.getElementById('uploadedFiles');
+            const uploadZone = document.querySelector('.upload-zone');
+
+            // Show selected file names
+            fileInput.addEventListener('change', function () {
+                uploadedFilesDiv.innerHTML = '';
+                if (fileInput.files.length > 0) {
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        const file = fileInput.files[i];
+                        const fileElem = document.createElement('div');
+                        fileElem.textContent = file.name;
+                        uploadedFilesDiv.appendChild(fileElem);
+                    }
+                }
+            });
+
+            // Drag & drop support
+            uploadZone.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+        // ...existing code...
+
 
 
         document.addEventListener('DOMContentLoaded', function() {

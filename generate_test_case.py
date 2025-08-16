@@ -1,5 +1,6 @@
 import os
 import requests
+from dotenv import load_dotenv
 
 
 def load_prompt():
@@ -21,7 +22,11 @@ def generate_test_case(requirement: str,test_type: str) -> str:
     print(f"Generating test case for: '{requirement}' with test type '{test_type}'")
 
     # Hugging Face token must be set as an environment variable
-    hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    load_dotenv()
+
+    hf_token = os.environ.get("HUGGINGFACE_TOKEN")
+
+    # hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
     if not hf_token:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN environment variable is not set")
     
@@ -68,7 +73,7 @@ def generate_automation_script(progLanguage,combined_test_cases: str) -> str:
     prompt = prompt_template.replace("{test_cases}", combined_test_cases)
     prompt = prompt.replace("{progLanguage}", progLanguage)
 
-    hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    hf_token = os.environ.get("HUGGINGFACE_TOKEN")
     if not hf_token:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN environment variable is not set")
 
@@ -87,6 +92,8 @@ def generate_automation_script(progLanguage,combined_test_cases: str) -> str:
         json=payload
     )
 
+
+    print(response)
     response_json = response.json()
     if isinstance(response_json, list):
         generated_text = response_json[0].get('generated_text', 'No script generated')

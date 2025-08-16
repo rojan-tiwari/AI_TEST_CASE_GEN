@@ -5,7 +5,12 @@ import csv
 from io import StringIO
 
 app = Flask(__name__)
-CORS(app)
+# ...existing code...
+CORS(app, resources={r"/*": {"origins": [
+    "http://localhost:63342",
+    "http://127.0.0.1:63342"
+]}}, supports_credentials=True)
+# ...existing code...
 
 @app.route('/generate', methods=['POST'])
 def generate_test_case_endpoint():
@@ -28,13 +33,18 @@ def generate_test_case_endpoint():
 
 
 
-@app.route('/upload-csv', methods=['POST'])
+@app.route('/upload-csv', methods=['POST', 'OPTIONS'])
 def upload_csv():
+    print("entered back-end")
+    if request.method == 'OPTIONS':
+        # CORS preflight response
+        return '', 200
+
     if 'file' not in request.files:
         return jsonify({'status': 'error', 'message': 'No file uploaded'}), 400
 
     file = request.files['file']
-    progLanguage = request.form.get('progLanguage')  
+    progLanguage = request.form.get('progLanguage')
 
     if not file.filename.endswith('.csv'):
         return jsonify({'status': 'error', 'message': 'Invalid file format. Please upload a CSV'}), 400
@@ -47,8 +57,9 @@ def upload_csv():
     next(csv_input, None)
 
     # Extract test cases
-    test_cases_list = [row[0] for row in csv_input if row]
+    test_cases_list = [" ".join(row) for row in csv_input if row]
     combined_test_cases = "\n".join(test_cases_list)
+    print("comb", test_cases_list)
 
     # Generate automation script
     automation_script = generate_automation_script(progLanguage, combined_test_cases)
@@ -57,7 +68,6 @@ def upload_csv():
         'status': 'success',
         'automation_script': automation_script
     })
-
 
 if __name__ == '__main__':
     app.run(debug=True)
