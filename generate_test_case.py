@@ -35,7 +35,7 @@ def generate_test_case(requirement: str,test_type: str) -> str:
     prompt = prompt_template.replace("{requirement}", requirement)
     prompt = prompt.replace("{test_type}", test_type)
 
-    paylaod = {
+    payload = {
        "inputs": prompt,
        "parameters": {
           "max_new_tokens": 1000,
@@ -47,9 +47,17 @@ def generate_test_case(requirement: str,test_type: str) -> str:
     response = requests.post(
        f"https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
        headers={"Authorization": f"Bearer {hf_token}"},
-       json=paylaod
+       json=payload
     )
     
+    print("Status Code:", response.status_code)
+    print("Raw Response:", response.text)  
+    
+    try:
+     response_json = response.json()
+    except Exception as e:
+     print("Failed to parse JSON:", e)
+
     response_json = response.json()
     print("Response from model",response_json)
 
@@ -92,7 +100,7 @@ def generate_automation_script(progLanguage,combined_test_cases: str) -> str:
         json=payload
     )
 
-
+    response_json = {"error": response.text}
     print(response)
     response_json = response.json()
     if isinstance(response_json, list):
